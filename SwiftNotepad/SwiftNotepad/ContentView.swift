@@ -9,6 +9,7 @@ struct ContentView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .onDrop(of: [UTType.fileURL], isTargeted: nil, perform: handleDrop)
             .onAppear { appState.updateWindowTitle() }
+            .onOpenURL { url in appState.open(url: url) }
     }
 
     private func handleDrop(_ providers: [NSItemProvider]) -> Bool {

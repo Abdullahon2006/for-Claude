@@ -13,6 +13,7 @@
 		AA0000000000000000000104 /* NotepadTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000204 /* NotepadTextView.swift */; };
 		AA0000000000000000000105 /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000205 /* SyntaxHighlighter.swift */; };
 		AA0000000000000000000106 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000206 /* Assets.xcassets */; };
+		AA0000000000000000000107 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000210 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +26,7 @@
 		AA0000000000000000000207 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AA0000000000000000000208 /* SwiftNotepad.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SwiftNotepad.entitlements; sourceTree = "<group>"; };
 		AA0000000000000000000209 /* SwiftNotepad.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftNotepad.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0000000000000000000210 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -42,6 +44,7 @@
 			isa = PBXGroup;
 			children = (
 				AA0000000000000000000201 /* SwiftNotepadApp.swift */,
+				AA0000000000000000000210 /* AppDelegate.swift */,
 				AA0000000000000000000202 /* AppState.swift */,
 				AA0000000000000000000203 /* ContentView.swift */,
 				AA0000000000000000000204 /* NotepadTextView.swift */,
@@ -143,6 +146,7 @@
 				AA0000000000000000000103 /* ContentView.swift in Sources */,
 				AA0000000000000000000104 /* NotepadTextView.swift in Sources */,
 				AA0000000000000000000105 /* SyntaxHighlighter.swift in Sources */,
+				AA0000000000000000000107 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

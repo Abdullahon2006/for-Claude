@@ -27,6 +27,14 @@ class AppState: ObservableObject {
             name: NSWindow.willCloseNotification,
             object: nil
         )
+
+        // Receive files opened via Finder "Open With"
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleFinderOpen(_:)),
+            name: .openFileFromFinder,
+            object: nil
+        )
     }
 
     @objc private func windowWillClose(_ notification: Notification) {
@@ -34,6 +42,11 @@ class AppState: ObservableObject {
         if currentFileURL != nil {
             save()
         }
+    }
+
+    @objc private func handleFinderOpen(_ notification: Notification) {
+        guard let url = notification.object as? URL else { return }
+        open(url: url)
     }
 
     // MARK: - File operations
@@ -82,7 +95,7 @@ class AppState: ObservableObject {
     func saveAs() {
         let panel = NSSavePanel()
         panel.directoryURL = defaultNotesDirectory()
-        panel.nameFieldStringValue = "Untitled.md"
+        panel.nameFieldStringValue = "Untitled.txt"
         if panel.runModal() == .OK, let url = panel.url {
             currentFileURL = url
             save()
