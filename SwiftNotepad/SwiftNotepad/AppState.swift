@@ -61,14 +61,13 @@ class AppState: ObservableObject {
 
     // MARK: - Cursor / status bar
 
-    func updateCursorPosition(in textView: NSTextView) {
-        let text   = textView.string as NSString
-        let loc    = min(textView.selectedRange().location, text.length)
+    func updateCursorPosition(text: String, location: Int) {
+        let nsText = text as NSString
+        let loc    = min(location, nsText.length)
         var line   = 1
         var lineStart = 0
-
         for i in 0 ..< loc {
-            if text.character(at: i) == 0x0A { // '\n'
+            if nsText.character(at: i) == 0x0A {
                 line += 1
                 lineStart = i + 1
             }
