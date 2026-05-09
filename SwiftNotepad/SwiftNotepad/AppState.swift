@@ -6,10 +6,27 @@ class AppState: ObservableObject {
     @Published var currentFileURL: URL?
     @Published var isModified: Bool = false
 
+    // Font size — persisted
+    @Published var fontSize: CGFloat = 14
+
+    // Status bar
+    @Published var cursorLine: Int = 1
+    @Published var cursorColumn: Int = 1
+    @Published var wordCount: Int = 0
+    @Published var charCount: Int = 0
+
+    // Recent files
+    @Published var recentFiles: [URL] = []
+
     private var cancellables = Set<AnyCancellable>()
 
     init() {
+        // Restore persisted font size
+        let stored = UserDefaults.standard.double(forKey: "fontSize")
+        if stored > 0 { fontSize = CGFloat(stored) }
+
         createDefaultNotesFolder()
+        loadRecentFiles()
 
         // Auto-save 3 seconds after the last edit
         $content
@@ -20,28 +37,57 @@ class AppState: ObservableObject {
             }
             .store(in: &cancellables)
 
-        // Save on window close
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(windowWillClose),
-            name: NSWindow.willCloseNotification,
-            object: nil
-        )
+        // Persist font size changes
+        $fontSize
+            .dropFirst()
+            .sink { UserDefaults.standard.set(Double($0), forKey: "fontSize") }
+            .store(in: &cancellables)
 
-        // Receive files opened via Finder "Open With"
         NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleFinderOpen(_:)),
-            name: .openFileFromFinder,
-            object: nil
+            self, selector: #selector(windowWillClose),
+            name: NSWindow.willCloseNotification, object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(handleFinderOpen(_:)),
+            name: .openFileFromFinder, object: nil
         )
     }
 
-    @objc private func windowWillClose(_ notification: Notification) {
-        guard isModified else { return }
-        if currentFileURL != nil {
-            save()
+    // MARK: - Font size
+
+    func increaseFontSize() { fontSize = min(fontSize + 1, 36) }
+    func decreaseFontSize() { fontSize = max(fontSize - 1,  9) }
+    func resetFontSize()    { fontSize = 14 }
+
+    // MARK: - Cursor / status bar
+
+    func updateCursorPosition(in textView: NSTextView) {
+        let text   = textView.string as NSString
+        let loc    = min(textView.selectedRange().location, text.length)
+        var line   = 1
+        var lineStart = 0
+
+        for i in 0 ..< loc {
+            if text.character(at: i) == 0x0A { // '\n'
+                line += 1
+                lineStart = i + 1
+            }
         }
+        cursorLine   = line
+        cursorColumn = loc - lineStart + 1
+    }
+
+    func updateStats(text: String) {
+        charCount = text.count
+        wordCount = text.isEmpty ? 0 :
+            text.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }.count
+    }
+
+    // MARK: - Window notifications
+
+    @objc private func windowWillClose(_ notification: Notification) {
+        guard isModified, currentFileURL != nil else { return }
+        save()
     }
 
     @objc private func handleFinderOpen(_ notification: Notification) {
@@ -56,6 +102,8 @@ class AppState: ObservableObject {
         content = ""
         currentFileURL = nil
         isModified = false
+        wordCount = 0
+        charCount = 0
         updateWindowTitle()
     }
 
@@ -72,10 +120,14 @@ class AppState: ObservableObject {
 
     func open(url: URL) {
         do {
-            content = try String(contentsOf: url, encoding: .utf8)
+            let text = try String(contentsOf: url, encoding: .utf8)
+            content = text
             currentFileURL = url
             isModified = false
             updateWindowTitle()
+            updateStats(text: text)
+            addToRecentFiles(url)
+            NSDocumentController.shared.noteNewRecentDocumentURL(url)
         } catch {
             showError("Could not open file", detail: error.localizedDescription)
         }
@@ -107,6 +159,29 @@ class AppState: ObservableObject {
         updateWindowTitle()
     }
 
+    // MARK: - Recent files
+
+    func addToRecentFiles(_ url: URL) {
+        recentFiles.removeAll { $0 == url }
+        recentFiles.insert(url, at: 0)
+        if recentFiles.count > 10 { recentFiles = Array(recentFiles.prefix(10)) }
+        saveRecentFiles()
+    }
+
+    func clearRecentFiles() {
+        recentFiles = []
+        UserDefaults.standard.removeObject(forKey: "recentFiles")
+    }
+
+    private func loadRecentFiles() {
+        let strings = UserDefaults.standard.stringArray(forKey: "recentFiles") ?? []
+        recentFiles = strings.compactMap { URL(string: $0) }
+    }
+
+    private func saveRecentFiles() {
+        UserDefaults.standard.set(recentFiles.map(\.absoluteString), forKey: "recentFiles")
+    }
+
     // MARK: - Helpers
 
     private func saveIfNeeded() {
@@ -128,21 +203,16 @@ class AppState: ObservableObject {
 
     func updateWindowTitle() {
         DispatchQueue.main.async {
-            let base: String
-            if let url = self.currentFileURL {
-                base = url.lastPathComponent
-            } else {
-                base = "Untitled"
-            }
+            let base = self.currentFileURL?.lastPathComponent ?? "Untitled"
             NSApp.windows.first?.title = self.isModified ? "\(base) \u{2022}" : base
         }
     }
 
     private func showError(_ message: String, detail: String) {
         let alert = NSAlert()
-        alert.messageText = message
+        alert.messageText    = message
         alert.informativeText = detail
-        alert.alertStyle = .warning
+        alert.alertStyle     = .warning
         alert.runModal()
     }
 }

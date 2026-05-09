@@ -5,11 +5,14 @@ struct ContentView: View {
     @EnvironmentObject var appState: AppState
 
     var body: some View {
-        NotepadTextView()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .onDrop(of: [UTType.fileURL], isTargeted: nil, perform: handleDrop)
-            .onAppear { appState.updateWindowTitle() }
-            .onOpenURL { url in appState.open(url: url) }
+        VStack(spacing: 0) {
+            NotepadTextView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            StatusBarView()
+        }
+        .onDrop(of: [UTType.fileURL], isTargeted: nil, perform: handleDrop)
+        .onAppear { appState.updateWindowTitle() }
+        .onOpenURL { url in appState.open(url: url) }
     }
 
     private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
